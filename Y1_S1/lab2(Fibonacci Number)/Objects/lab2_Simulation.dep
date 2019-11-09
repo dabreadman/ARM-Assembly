@@ -1,0 +1,2 @@
+Dependencies for Project 'lab2', Target 'Simulation': (DO NOT MODIFY !)
+F (.\lab2.s)(0x5BBCCB69)(--cpu ARM7TDMI --pd "__EVAL SETA 1" -g --apcs=interwork -I C:\Keil_v5\ARM\RV31\INC-I C:\Keil_v5\ARM\CMSIS\Include-I C:\Keil_v5\ARM\Inc\Philips--pd "__UVISION_VERSION SETA 516"--list .\listings\lab2.lst --xref -o .\objects\lab2.o --depend .\objects\lab2.d)

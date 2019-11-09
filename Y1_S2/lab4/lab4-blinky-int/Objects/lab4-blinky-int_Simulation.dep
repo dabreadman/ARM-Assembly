@@ -1,0 +1,2 @@
+Dependencies for Project 'lab4-blinky-int', Target 'Simulation': (DO NOT MODIFY !)
+F (.\lab4-blinky-int.s)(0x5CAC6EB6)(--cpu ARM7TDMI -g --apcs=interwork -I C:\Keil_v5\ARM\RV31\INC-I C:\Keil_v5\ARM\CMSIS\Include-I C:\Keil_v5\ARM\Inc\Philips--pd "__UVISION_VERSION SETA 516"--list .\listings\lab4-blinky-int.lst --xref -o .\objects\lab4-blinky-int.o --depend .\objects\lab4-blinky-int.d)

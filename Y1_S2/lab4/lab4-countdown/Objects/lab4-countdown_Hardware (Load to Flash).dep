@@ -1,0 +1,2 @@
+Dependencies for Project 'lab4-countdown', Target 'Hardware (Load to Flash)': (DO NOT MODIFY !)
+F (.\lab4-countdown.s)(0x5CB06448)(--cpu ARM7TDMI -g --apcs=interwork -I C:\Keil_v5\ARM\RV31\INC-I C:\Keil_v5\ARM\CMSIS\Include-I C:\Keil_v5\ARM\Inc\Philips--pd "__UVISION_VERSION SETA 516"--list .\listings\lab4-countdown.lst --xref -o .\objects\lab4-countdown.o --depend .\objects\lab4-countdown.d)

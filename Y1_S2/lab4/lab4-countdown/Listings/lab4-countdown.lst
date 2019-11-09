@@ -1,0 +1,997 @@
+
+
+
+ARM Macro Assembler    Page 1 
+
+
+    1 00000000         ;
+    2 00000000         ; CS1022 Introduction to Computing II 2018/2019
+    3 00000000         ; Lab 4 - countdown
+    4 00000000         ;
+    5 00000000 E0004000 
+                       T0IR    EQU              0xE0004000
+    6 00000000 E0004004 
+                       T0TCR   EQU              0xE0004004
+    7 00000000 E0004018 
+                       T0MR0   EQU              0xE0004018
+    8 00000000 E0004014 
+                       T0MCR   EQU              0xE0004014
+    9 00000000         
+   10 00000000 E002C010 
+                       PINSEL4 EQU              0xE002C010
+   11 00000000         
+   12 00000000 3FFFC041 
+                       FIO2DIR1
+                               EQU              0x3FFFC041
+   13 00000000 3FFFC055 
+                       FIO2PIN1
+                               EQU              0x3FFFC055
+   14 00000000         
+   15 00000000 E01FC140 
+                       EXTINT  EQU              0xE01FC140
+   16 00000000 E01FC148 
+                       EXTMODE EQU              0xE01FC148
+   17 00000000 E01FC14C 
+                       EXTPOLAR
+                               EQU              0xE01FC14C
+   18 00000000         
+   19 00000000 FFFFF00C 
+                       VICIntSelect
+                               EQU              0xFFFFF00C
+   20 00000000 FFFFF010 
+                       VICIntEnable
+                               EQU              0xFFFFF010
+   21 00000000 FFFFF100 
+                       VICVectAddr0
+                               EQU              0xFFFFF100
+   22 00000000 FFFFF200 
+                       VICVectPri0
+                               EQU              0xFFFFF200
+   23 00000000 FFFFFF00 
+                       VICVectAddr
+                               EQU              0xFFFFFF00
+   24 00000000         
+   25 00000000 00000004 
+                       VICVectT0
+                               EQU              4
+   26 00000000 0000000E 
+                       VICVectEINT0
+                               EQU              14
+   27 00000000         
+   28 00000000 00000080 
+                       Irq_Stack_Size
+                               EQU              0x80
+   29 00000000         
+   30 00000000 00000010 
+
+
+
+ARM Macro Assembler    Page 2 
+
+
+                       Mode_USR
+                               EQU              0x10
+   31 00000000 00000012 
+                       Mode_IRQ
+                               EQU              0x12
+   32 00000000 00000080 
+                       I_Bit   EQU              0x80        ; when I bit is set
+                                                            , IRQ is disabled
+   33 00000000 00000040 
+                       F_Bit   EQU              0x40        ; when F bit is set
+                                                            , FIQ is disabled
+   34 00000000         
+   35 00000000         
+   36 00000000                 AREA             RESET, CODE, READONLY
+   37 00000000                 ENTRY
+   38 00000000         
+   39 00000000         ; Exception Vectors
+   40 00000000         
+   41 00000000 EA000006        B                Reset_Handler ; 0x00000000
+   42 00000004 EA00004C        B                Undef_Handler ; 0x00000004
+   43 00000008 EA00004C        B                SWI_Handler ; 0x00000008
+   44 0000000C EA00004C        B                PAbt_Handler ; 0x0000000C
+   45 00000010 EA00004C        B                DAbt_Handler ; 0x00000010
+   46 00000014 E1A00000        NOP                          ; 0x00000014
+   47 00000018 EA00004B        B                IRQ_Handler ; 0x00000018
+   48 0000001C EA000050        B                FIQ_Handler ; 0x0000001C
+   49 00000020         
+   50 00000020         ;
+   51 00000020         ; Reset Exception Handler
+   52 00000020         ;
+   53 00000020         Reset_Handler
+   54 00000020         
+   55 00000020         ;
+   56 00000020         ; Initialize Stack Pointers (SP) for each mode we are us
+                       ing
+   57 00000020         ;
+   58 00000020         
+   59 00000020         ; Stack Top
+   60 00000020 E59F01F0        LDR              R0, =0x40010000
+   61 00000024         
+   62 00000024         ; Enter undef mode and set initial SP
+   63 00000024 E321F0D2        MSR              CPSR_c, #Mode_IRQ:OR:I_Bit:OR:F
+_Bit
+   64 00000028 E1A0D000        MOV              SP, R0
+   65 0000002C E2400080        SUB              R0, R0, #Irq_Stack_Size
+   66 00000030         
+   67 00000030         ; Enter user mode and set initial SP
+   68 00000030 E321F010        MSR              CPSR_c, #Mode_USR
+   69 00000034 E1A0D000        MOV              SP, R0
+   70 00000038         
+   71 00000038         
+   72 00000038         ; INITIALIZE TIMECOUNT
+   73 00000038 E59F41DC        LDR              R4,=time    ; address of time
+   74 0000003C E3A05005        MOV              R5,#5       ; 5 seconds initial
+                                                            ly
+   75 00000040 E5845000        STR              R5,[R4]     ; set initial timer
+                                                             to 5 
+   76 00000044         
+   77 00000044         ;
+
+
+
+ARM Macro Assembler    Page 3 
+
+
+   78 00000044         ; Initialise peripherals here
+   79 00000044         ;
+   80 00000044         
+   81 00000044         ;
+   82 00000044         ; Configure TIMER0
+   83 00000044         ;
+   84 00000044         
+   85 00000044         ; Stop and reset TIMER0 using Timer Control Register
+   86 00000044         ; Set bit 0 of TCR to 0 to stop TIMER
+   87 00000044         ; Set bit 1 of TCR to 1 to reset TIMER
+   88 00000044 E59F51D4        LDR              R5, =T0TCR
+   89 00000048 E3A06002        LDR              R6, =0x2
+   90 0000004C E5C56000        STRB             R6, [R5]
+   91 00000050         
+   92 00000050         ; Clear any previous TIMER0 interrupt by writing 0xFF to
+                        the TIMER0
+   93 00000050         ; Interrupt Register (T0IR)
+   94 00000050 E59F51CC        LDR              R5, =T0IR
+   95 00000054 E3A060FF        LDR              R6, =0xFF
+   96 00000058 E5C56000        STRB             R6, [R5]
+   97 0000005C         
+   98 0000005C         ; Set match register for 1 secs using Match Register
+   99 0000005C         ; Assuming a 1Mhz clock input to TIMER0, set MR
+  100 0000005C         ; MR0 (0xE0004018) to 1,000,000
+  101 0000005C E59F41C4        LDR              R4, =T0MR0
+  102 00000060 E59F51C4        LDR              R5, =1000000
+  103 00000064 E5845000        STR              R5, [R4]
+  104 00000068         
+  105 00000068         ; IRQ on match using Match Control Register
+  106 00000068         ; Set bit 0 of MCR to 1 to turn on interrupts
+  107 00000068         ; Set bit 1 of MCR to 1 to reset counter to 0 after ever
+                       y match
+  108 00000068         ; Set bit 2 of MCR to 0 to leave the counter enabled aft
+                       er match
+  109 00000068 E59F41C0        LDR              R4, =T0MCR
+  110 0000006C E3A05003        LDR              R5, =0x03
+  111 00000070 E1C450B0        STRH             R5, [R4]
+  112 00000074         
+  113 00000074         ;
+  114 00000074         ; Configure VIC for TIMER0 interrupts
+  115 00000074         ;
+  116 00000074         
+  117 00000074         ; Useful VIC vector numbers and masks for following code
+                       
+  118 00000074 E3A03004        LDR              R3, =VICVectT0 ; vector 4
+  119 00000078 E3A04010        LDR              R4, =(1 << VICVectT0) ; bit mas
+                                                            k for vector 4
+  120 0000007C         
+  121 0000007C         ; VICIntSelect - Clear bit 4 of VICIntSelect register to
+                        cause
+  122 0000007C         ; channel 4 (TIMER0) to raise IRQs (not FIQs)
+  123 0000007C E59F51B0        LDR              R5, =VICIntSelect ; addr = VICV
+                                                            ectSelect;
+  124 00000080 E5956000        LDR              R6, [R5]    ; tmp = Memory.Word
+                                                            (addr);
+  125 00000084 E1C66004        BIC              R6, R6, R4  ; Clear bit for Vec
+                                                            tor 0x04
+  126 00000088 E5856000        STR              R6, [R5]    ; Memory.Word(addr)
+                                                             = tmp;
+
+
+
+ARM Macro Assembler    Page 4 
+
+
+  127 0000008C         
+  128 0000008C         ; Set Priority for VIC channel 4 (TIMER0) to lowest (15)
+                        by setting
+  129 0000008C         ; VICVectPri4 to 15. Note: VICVectPri4 is the element at
+                        index 4 of an
+  130 0000008C         ; array of 4-byte values that starts at VICVectPri0.
+  131 0000008C         ; i.e. VICVectPri4=VICVectPri0+(4*4)
+  132 0000008C E59F51A4        LDR              R5, =VICVectPri0 ; addr = VICVe
+                                                            ctPri0;
+  133 00000090 E3A0600F        MOV              R6, #15     ; pri = 15;
+  134 00000094 E7856103        STR              R6, [R5, R3, LSL #2] ; Memory.W
+                                                            ord(addr + vector *
+                                                             4) = pri;
+  135 00000098         
+  136 00000098         ; Set Handler routine address for VIC channel 4 (TIMER0)
+                        to address of
+  137 00000098         ; our handler routine (TimerHandler). Note: VICVectAddr4
+                        is the element
+  138 00000098         ; at index 4 of an array of 4-byte values that starts at
+                        VICVectAddr0.
+  139 00000098         ; i.e. VICVectAddr4=VICVectAddr0+(4*4)
+  140 00000098 E59F519C        LDR              R5, =VICVectAddr0 ; addr = VICV
+                                                            ectAddr0;
+  141 0000009C E59F619C        LDR              R6, =Timer_Handler ; handler = 
+                                                            address of TimerHan
+                                                            dler;
+  142 000000A0 E7856103        STR              R6, [R5, R3, LSL #2] ; Memory.W
+                                                            ord(addr + vector *
+                                                             4) = handler
+  143 000000A4         
+  144 000000A4         ; Enable VIC channel 4 (TIMER0) by writing a 1 to bit 4 
+                       of VICIntEnable
+  145 000000A4 E59F5198        LDR              R5, =VICIntEnable ; addr = VICI
+                                                            ntEnable;
+  146 000000A8 E5854000        STR              R4, [R5]    ; enable interrupts
+                                                             for vector 0x4
+  147 000000AC         
+  148 000000AC         ;
+  149 000000AC         ; Configure P2.10 for EINT0
+  150 000000AC         ;
+  151 000000AC         
+  152 000000AC         ; Enable P2.10 for GPIO
+  153 000000AC E59F4194        LDR              R4, =PINSEL4
+  154 000000B0 E5945000        LDR              R5, [R4]    ; read current valu
+                                                            e
+  155 000000B4 E3C55603        BIC              R5, #(0x03 << 20) 
+                                                            ; clear bits 21:20
+  156 000000B8 E3855601        ORR              R5, #(0x01 << 20) ; set bits 21
+                                                            :20 to 01
+  157 000000BC E5845000        STR              R5, [R4]    ; write new value
+  158 000000C0         
+  159 000000C0         ; Set P2.10 for output
+  160 000000C0 E59F5184        LDR              R5, =FIO2DIR1 ; Address of FIO2
+                                                            DIR1
+  161 000000C4 E1A00000        NOP
+  162 000000C8 E5D56000        LDRB             R6, [R5]    ; Read FIO2DIR1
+  163 000000CC E3866004        ORR              R6, #(0x1 << 2) ; Modify bit 2 
+                                                            to value 1 to confi
+                                                            gure output
+
+
+
+ARM Macro Assembler    Page 5 
+
+
+  164 000000D0 E5C56000        STRB             R6, [R5]    ; Write FIO2DIR1
+  165 000000D4         
+  166 000000D4         ; Set edge-sensitive mode for EINT0
+  167 000000D4 E59F4174        LDR              R4, =EXTMODE
+  168 000000D8 E5945000        LDR              R5, [R4]    ; read
+  169 000000DC E3855001        ORR              R5, #1      ; modify
+  170 000000E0 E5C45000        STRB             R5, [R4]    ; write
+  171 000000E4         
+  172 000000E4         ; Set rising-edge mode for EINT0
+  173 000000E4 E59F4168        LDR              R4, =EXTPOLAR
+  174 000000E8 E5945000        LDR              R5, [R4]    ; read
+  175 000000EC E3C55001        BIC              R5, #1      ; modify
+  176 000000F0 E5C45000        STRB             R5, [R4]    ; write
+  177 000000F4         
+  178 000000F4         ; Reset EINT0
+  179 000000F4 E59F415C        LDR              R4, =EXTINT
+  180 000000F8 E3A05001        MOV              R5, #1
+  181 000000FC E5C45000        STRB             R5, [R4]
+  182 00000100         
+  183 00000100         ;
+  184 00000100         ; Configure VIC for EINT0 interrupts
+  185 00000100         ;
+  186 00000100         
+  187 00000100         ; Useful VIC vector numbers and masks for following code
+                       
+  188 00000100 E3A0400E        LDR              R4, =VICVectEINT0 ; vector 4
+  189 00000104 E3A05901        LDR              R5, =(1 << VICVectEINT0) ; bit 
+                                                            mask for vector 14
+  190 00000108         
+  191 00000108         ; VICIntSelect - Clear bit 4 of VICIntSelect register to
+                        cause
+  192 00000108         ; channel 14 (EINT0) to raise IRQs (not FIQs)
+  193 00000108 E59F6124        LDR              R6, =VICIntSelect ; addr = VICV
+                                                            ectSelect;
+  194 0000010C E5967000        LDR              R7, [R6]    ; tmp = Memory.Word
+                                                            (addr);
+  195 00000110 E1C77005        BIC              R7, R7, R5  ; Clear bit for Vec
+                                                            tor 14
+  196 00000114 E5867000        STR              R7, [R6]    ; Memory.Word(addr)
+                                                             = tmp;
+  197 00000118         
+  198 00000118         ; Set Priority for VIC channel 14 (EINT0) to lowest (15)
+                        by setting
+  199 00000118         ; VICVectPri4 to 15. Note: VICVectPri4 is the element at
+                        index 14 of an
+  200 00000118         ; array of 4-byte values that starts at VICVectPri0.
+  201 00000118         ; i.e. VICVectPri4=VICVectPri0+(4*4)
+  202 00000118 E59F6118        LDR              R6, =VICVectPri0 ; addr = VICVe
+                                                            ctPri0;
+  203 0000011C E3A0700F        MOV              R7, #15     ; pri = 15;
+  204 00000120 E7867104        STR              R7, [R6, R4, LSL #2] ; Memory.W
+                                                            ord(addr + vector *
+                                                             4) = pri;
+  205 00000124         
+  206 00000124         ; Set Handler routine address for VIC channel 4 (TIMER0)
+                        to address of
+  207 00000124         ; our handler routine (TimerHandler). Note: VICVectAddr4
+                        is the element
+  208 00000124         ; at index 4 of an array of 4-byte values that starts at
+
+
+
+ARM Macro Assembler    Page 6 
+
+
+                        VICVectAddr0.
+  209 00000124         ; i.e. VICVectAddr4=VICVectAddr0+(4*4)
+  210 00000124 E59F6110        LDR              R6, =VICVectAddr0 ; addr = VICV
+                                                            ectAddr0;
+  211 00000128 E59F712C        LDR              R7, =Button_Handler ; handler =
+                                                             address of TimerHa
+                                                            ndler;
+  212 0000012C E7867104        STR              R7, [R6, R4, LSL #2] ; Memory.W
+                                                            ord(addr + vector *
+                                                             4) = handler
+  213 00000130         
+  214 00000130         ; Enable VIC channel 14 (EINT0) by writing a 1 to bit 4 
+                       of VICIntEnable
+  215 00000130 E59F610C        LDR              R6, =VICIntEnable ; addr = VICI
+                                                            ntEnable;
+  216 00000134 E5865000        STR              R5, [R6]    ; enable interrupts
+                                                             for vector 14
+  217 00000138         
+  218 00000138         ;
+  219 00000138         ; Nothing more to do here!!! The rest of our programs fu
+                       nctionality
+  220 00000138         ; takes place in the context of our IRQ handler (which w
+                       ill interrupt
+  221 00000138         ; the STOP B STOP loop).
+  222 00000138         ;
+  223 00000138         ; Real systems often implement an "idle loop" here, for 
+                       example, doing
+  224 00000138         ; some housekeeping or putting the processor into a powe
+                       r-saving state.
+  225 00000138         ;
+  226 00000138         
+  227 00000138         
+  228 00000138         ;   Don't start TIMER0 yet!! We're waiting for a button 
+                       press
+  229 00000138         ;
+  230 00000138         
+  231 00000138 EAFFFFFE 
+                       STOP    B                STOP
+  232 0000013C         
+  233 0000013C         
+  234 0000013C         ;
+  235 0000013C         ; Software Interrupt Exception Handler
+  236 0000013C         ;
+  237 0000013C         Undef_Handler
+  238 0000013C EAFFFFFE        B                Undef_Handler
+  239 00000140         
+  240 00000140         ;
+  241 00000140         ; Software Interrupt Exception Handler
+  242 00000140         ;
+  243 00000140         SWI_Handler
+  244 00000140 EAFFFFFE        B                SWI_Handler
+  245 00000144         
+  246 00000144         ;
+  247 00000144         ; Prefetch Abort Exception Handler
+  248 00000144         ;
+  249 00000144         PAbt_Handler
+  250 00000144 EAFFFFFE        B                PAbt_Handler
+  251 00000148         
+  252 00000148         ;
+
+
+
+ARM Macro Assembler    Page 7 
+
+
+  253 00000148         ; Data Abort Exception Handler
+  254 00000148         ;
+  255 00000148         DAbt_Handler
+  256 00000148 EAFFFFFE        B                DAbt_Handler
+  257 0000014C         
+  258 0000014C         ;
+  259 0000014C         ; Interrupt ReQuest (IRQ) Exception Handler (top level -
+                        all devices)
+  260 0000014C         ;
+  261 0000014C         IRQ_Handler
+  262 0000014C E24EE004        SUB              lr, lr, #4  ; for IRQs, LR is a
+                                                            lways 4 more than t
+                                                            he
+  263 00000150         ; real return address
+  264 00000150 E92D400F        STMFD            sp!, {r0-r3,lr} 
+                                                            ; save r0-r3 and lr
+                                                            
+  265 00000154         
+  266 00000154 E3E000FF        LDR              r0, =VICVectAddr ; address of V
+                                                            IC Vector Address m
+                                                            emory-
+  267 00000158         ; mapped register
+  268 00000158         
+  269 00000158 E1A0E00F        MOV              lr, pc      ; can’t use BL he
+                                                            re because we are b
+                                                            ranching
+  270 0000015C E590F000        LDR              pc, [r0]    ; to a different su
+                                                            broutine dependant 
+                                                            on device
+  271 00000160         ; raising the IRQ - this is a manual BL !!
+  272 00000160         
+  273 00000160 E8FD800F        LDMFD            sp!, {r0-r3, pc}^ ; restore r0-
+                                                            r3, lr and CPSR
+  274 00000164         
+  275 00000164         ;
+  276 00000164         ; Fast Interrupt reQuest Exception Handler
+  277 00000164         ;
+  278 00000164         FIQ_Handler
+  279 00000164 EAFFFFFE        B                FIQ_Handler
+  280 00000168         
+  281 00000168         
+  282 00000168         ;
+  283 00000168         ; TIMER0 IRQ Handler (device-specific handler called by 
+                       top-level IRQ_Handler)
+  284 00000168         ;
+  285 00000168         Timer_Handler
+  286 00000168         
+  287 00000168 E92D4070        STMFD            sp!, {r4-r6, lr}
+  288 0000016C         
+  289 0000016C         ; Reset TIMER0 interrupt by writing 0xFF to T0IR
+  290 0000016C E59F40B0        LDR              R4, =T0IR
+  291 00000170 E3A050FF        MOV              R5, #0xFF
+  292 00000174 E5C45000        STRB             R5, [R4]
+  293 00000178         
+  294 00000178         ;
+  295 00000178 E59F409C        LDR              R4,=time    ; get address of ti
+                                                            me
+  296 0000017C E5945000        LDR              R5,[R4]     ; get time
+  297 00000180 E2455001        SUB              R5,R5,#1    ; subract time
+
+
+
+ARM Macro Assembler    Page 8 
+
+
+  298 00000184 E3550000        CMP              R5,#0       ; if timer runs out
+                                                            
+  299 00000188 0A000001        BEQ              ledON
+  300 0000018C E5845000        STR              R5,[R4]     ; store time remain
+                                                            ing
+  301 00000190 EA000009        B                endL
+  302 00000194         
+  303 00000194         ledON                                ; Enable P2.10 for 
+                                                            GPIO
+  304 00000194 E59F50AC        LDR              R5, =PINSEL4 ; load address of 
+                                                            PINSEL4
+  305 00000198 E5956000        LDR              R6, [R5]    ; read current PINS
+                                                            EL4 value
+  306 0000019C E3C66603        BIC              R6, #(0x3 << 20) ; modify bits 
+                                                            20 and 21 to 00
+  307 000001A0 E5856000        STR              R6, [R5]    ; write new PINSEL4
+                                                             value
+  308 000001A4         
+  309 000001A4         
+  310 000001A4         ; read current P2.10 output value
+  311 000001A4         ;   0 or 1 in bit 2 of FIO2PIN1
+  312 000001A4 E3A04004        LDR              R4, =0x04   ;   setup bit mask 
+                                                            for P2.10 bit in FI
+                                                            O2PIN1
+  313 000001A8 E59F50B4        LDR              R5, =FIO2PIN1 ;
+  314 000001AC E5D56000        LDRB             R6, [R5]    ;   read FIO2PIN1
+  315 000001B0         
+  316 000001B0         ; modify P2.10 output (leaving other pin outputs control
+                       led by
+  317 000001B0         ;   FIO2PIN1 with their original value)
+  318 000001B0         
+  319 000001B0 E1C66004        BIC              R6, R6, R4  ;     clear bit 2 (
+                                                            turn LED on)
+  320 000001B4 E5C56000        STRB             R6, [R5]    ; write new FIO2PIN
+                                                            1 value
+  321 000001B8 EAFFFFFF        B                endL
+  322 000001BC         
+  323 000001BC         
+  324 000001BC         ;;Clear source of interrupt by writing 0 to VICVectAddr
+  325 000001BC E3E040FF 
+                       endL    LDR              R4, =VICVectAddr
+  326 000001C0 E3A05000        MOV              R5, #0
+  327 000001C4 E5845000        STR              R5, [R4]
+  328 000001C8         
+  329 000001C8 E8BD8070        LDMFD            sp!, {r4-r6, pc}
+  330 000001CC         
+  331 000001CC         
+  332 000001CC         ;
+  333 000001CC         ; EINT0 IRQ Handler (device-specific handler called by t
+                       op-level IRQ_Handler)
+  334 000001CC         ;
+  335 000001CC         Button_Handler
+  336 000001CC         
+  337 000001CC E92D4070        STMFD            sp!, {r4-r6, lr}
+  338 000001D0         
+  339 000001D0         ; Reset EINT0 interrupt by writing 1 to EXTINT register
+  340 000001D0 E59F4080        LDR              R4, =EXTINT
+  341 000001D4 E3A05001        MOV              R5, #1
+  342 000001D8 E5C45000        STRB             R5, [R4]
+
+
+
+ARM Macro Assembler    Page 9 
+
+
+  343 000001DC         
+  344 000001DC         ; Start TIMER0 using the Timer Control Register
+  345 000001DC         ; Set bit 0 of TCR (0xE0004004) to enable the timer
+  346 000001DC E59F403C        LDR              R4, =T0TCR
+  347 000001E0 E5D45000        LDRB             R5, [R4]
+  348 000001E4 E3550001        CMP              R5, #0x1
+  349 000001E8 0A000002        BEQ              ADDTIME
+  350 000001EC E3A05001        LDR              R5, =0x01
+  351 000001F0 E5C45000        STRB             R5, [R4]
+  352 000001F4 EA000003        B                clc
+  353 000001F8         
+  354 000001F8 E59F401C 
+                       ADDTIME LDR              R4,=time    ; get address of ti
+                                                            me
+  355 000001FC E5945000        LDR              R5,[R4]     ; get remaining tim
+                                                            e
+  356 00000200 E2855005        ADD              R5,R5,#5    ; reduce the timer 
+                                                            remaining
+  357 00000204 E5845000        STR              R5,[R4]     ; store it back to 
+                                                            memory
+  358 00000208         
+  359 00000208         ;
+  360 00000208         ; Clear source of interrupt
+  361 00000208         ;
+  362 00000208 E3E040FF 
+                       clc     LDR              R4, =VICVectAddr ; addr = VICVe
+                                                            ctAddr
+  363 0000020C E3A05000        MOV              R5, #0      ; tmp = 0;
+  364 00000210 E5845000        STR              R5, [R4]    ; Memory.Word(addr)
+                                                             = tmp;
+  365 00000214         
+  366 00000214 E8BD8070        LDMFD            sp!, {r4-r6, pc}
+  367 00000218         
+  368 00000218         ;
+  369 00000218         ; your EINT0 (button) irq handler goes here
+  370 00000218         ; see button-int example to see how to handle EINT0 inte
+                       rrupts
+  371 00000218         ;
+  372 00000218         ; if this is he first press, you need to start TIMER0
+  373 00000218         ;   and set the remaining time to 5 seconds
+  374 00000218         ;
+  375 00000218         ; otherwise, you need to add another 5 seconds to the re
+                       maining time
+  376 00000218         ;
+  377 00000218         ; remember, changing the remaining time means loading th
+                       e remaining
+  378 00000218         ;   time, changing it and storing it back again
+  379 00000218         ;
+  380 00000218         
+  381 00000218         
+  382 00000218 40010000 
+              00000000 
+              E0004004 
+              E0004000 
+              E0004018 
+              000F4240 
+              E0004014 
+              FFFFF00C 
+              FFFFF200 
+
+
+
+ARM Macro Assembler    Page 10 
+
+
+              FFFFF100 
+              00000000 
+              FFFFF010 
+              E002C010 
+              3FFFC041 
+              E01FC148 
+              E01FC14C 
+              E01FC140 
+              00000000 
+              00000000 
+              3FFFC055 
+              00000000         AREA             TestData, DATA, READWRITE
+  383 00000000         
+  384 00000000 00 00 00 
+              00       time    SPACE            4
+  385 00000004         
+  386 00000004         
+  387 00000004                 END
+Command Line: --debug --xref --diag_suppress=9931 --apcs=interwork --depend=.\o
+bjects\lab4-countdown.d -o.\objects\lab4-countdown.o -IC:\Keil_v5\ARM\RV31\INC 
+-IC:\Keil_v5\ARM\CMSIS\Include -IC:\Keil_v5\ARM\Inc\Philips --predefine="__UVIS
+ION_VERSION SETA 516" --list=.\listings\lab4-countdown.lst lab4-countdown.s
+
+
+
+ARM Macro Assembler    Page 1 Alphabetic symbol ordering
+Relocatable symbols
+
+ADDTIME 000001F8
+
+Symbol: ADDTIME
+   Definitions
+      At line 354 in file lab4-countdown.s
+   Uses
+      At line 349 in file lab4-countdown.s
+Comment: ADDTIME used once
+Button_Handler 000001CC
+
+Symbol: Button_Handler
+   Definitions
+      At line 335 in file lab4-countdown.s
+   Uses
+      At line 211 in file lab4-countdown.s
+Comment: Button_Handler used once
+DAbt_Handler 00000148
+
+Symbol: DAbt_Handler
+   Definitions
+      At line 255 in file lab4-countdown.s
+   Uses
+      At line 45 in file lab4-countdown.s
+      At line 256 in file lab4-countdown.s
+
+FIQ_Handler 00000164
+
+Symbol: FIQ_Handler
+   Definitions
+      At line 278 in file lab4-countdown.s
+   Uses
+      At line 48 in file lab4-countdown.s
+      At line 279 in file lab4-countdown.s
+
+IRQ_Handler 0000014C
+
+Symbol: IRQ_Handler
+   Definitions
+      At line 261 in file lab4-countdown.s
+   Uses
+      At line 47 in file lab4-countdown.s
+Comment: IRQ_Handler used once
+PAbt_Handler 00000144
+
+Symbol: PAbt_Handler
+   Definitions
+      At line 249 in file lab4-countdown.s
+   Uses
+      At line 44 in file lab4-countdown.s
+      At line 250 in file lab4-countdown.s
+
+RESET 00000000
+
+Symbol: RESET
+   Definitions
+      At line 36 in file lab4-countdown.s
+   Uses
+      None
+Comment: RESET unused
+
+
+
+ARM Macro Assembler    Page 2 Alphabetic symbol ordering
+Relocatable symbols
+
+Reset_Handler 00000020
+
+Symbol: Reset_Handler
+   Definitions
+      At line 53 in file lab4-countdown.s
+   Uses
+      At line 41 in file lab4-countdown.s
+Comment: Reset_Handler used once
+STOP 00000138
+
+Symbol: STOP
+   Definitions
+      At line 231 in file lab4-countdown.s
+   Uses
+      At line 231 in file lab4-countdown.s
+Comment: STOP used once
+SWI_Handler 00000140
+
+Symbol: SWI_Handler
+   Definitions
+      At line 243 in file lab4-countdown.s
+   Uses
+      At line 43 in file lab4-countdown.s
+      At line 244 in file lab4-countdown.s
+
+Timer_Handler 00000168
+
+Symbol: Timer_Handler
+   Definitions
+      At line 285 in file lab4-countdown.s
+   Uses
+      At line 141 in file lab4-countdown.s
+Comment: Timer_Handler used once
+Undef_Handler 0000013C
+
+Symbol: Undef_Handler
+   Definitions
+      At line 237 in file lab4-countdown.s
+   Uses
+      At line 42 in file lab4-countdown.s
+      At line 238 in file lab4-countdown.s
+
+clc 00000208
+
+Symbol: clc
+   Definitions
+      At line 362 in file lab4-countdown.s
+   Uses
+      At line 352 in file lab4-countdown.s
+Comment: clc used once
+endL 000001BC
+
+Symbol: endL
+   Definitions
+      At line 325 in file lab4-countdown.s
+   Uses
+      At line 301 in file lab4-countdown.s
+      At line 321 in file lab4-countdown.s
+
+
+
+
+ARM Macro Assembler    Page 3 Alphabetic symbol ordering
+Relocatable symbols
+
+ledON 00000194
+
+Symbol: ledON
+   Definitions
+      At line 303 in file lab4-countdown.s
+   Uses
+      At line 299 in file lab4-countdown.s
+Comment: ledON used once
+15 symbols
+
+
+
+ARM Macro Assembler    Page 1 Alphabetic symbol ordering
+Relocatable symbols
+
+TestData 00000000
+
+Symbol: TestData
+   Definitions
+      At line 382 in file lab4-countdown.s
+   Uses
+      None
+Comment: TestData unused
+time 00000000
+
+Symbol: time
+   Definitions
+      At line 384 in file lab4-countdown.s
+   Uses
+      At line 73 in file lab4-countdown.s
+      At line 295 in file lab4-countdown.s
+      At line 354 in file lab4-countdown.s
+
+2 symbols
+
+
+
+ARM Macro Assembler    Page 1 Alphabetic symbol ordering
+Absolute symbols
+
+EXTINT E01FC140
+
+Symbol: EXTINT
+   Definitions
+      At line 15 in file lab4-countdown.s
+   Uses
+      At line 179 in file lab4-countdown.s
+      At line 340 in file lab4-countdown.s
+
+EXTMODE E01FC148
+
+Symbol: EXTMODE
+   Definitions
+      At line 16 in file lab4-countdown.s
+   Uses
+      At line 167 in file lab4-countdown.s
+Comment: EXTMODE used once
+EXTPOLAR E01FC14C
+
+Symbol: EXTPOLAR
+   Definitions
+      At line 17 in file lab4-countdown.s
+   Uses
+      At line 173 in file lab4-countdown.s
+Comment: EXTPOLAR used once
+FIO2DIR1 3FFFC041
+
+Symbol: FIO2DIR1
+   Definitions
+      At line 12 in file lab4-countdown.s
+   Uses
+      At line 160 in file lab4-countdown.s
+Comment: FIO2DIR1 used once
+FIO2PIN1 3FFFC055
+
+Symbol: FIO2PIN1
+   Definitions
+      At line 13 in file lab4-countdown.s
+   Uses
+      At line 313 in file lab4-countdown.s
+Comment: FIO2PIN1 used once
+F_Bit 00000040
+
+Symbol: F_Bit
+   Definitions
+      At line 33 in file lab4-countdown.s
+   Uses
+      At line 63 in file lab4-countdown.s
+Comment: F_Bit used once
+I_Bit 00000080
+
+Symbol: I_Bit
+   Definitions
+      At line 32 in file lab4-countdown.s
+   Uses
+      At line 63 in file lab4-countdown.s
+Comment: I_Bit used once
+Irq_Stack_Size 00000080
+
+
+
+
+ARM Macro Assembler    Page 2 Alphabetic symbol ordering
+Absolute symbols
+
+Symbol: Irq_Stack_Size
+   Definitions
+      At line 28 in file lab4-countdown.s
+   Uses
+      At line 65 in file lab4-countdown.s
+Comment: Irq_Stack_Size used once
+Mode_IRQ 00000012
+
+Symbol: Mode_IRQ
+   Definitions
+      At line 31 in file lab4-countdown.s
+   Uses
+      At line 63 in file lab4-countdown.s
+Comment: Mode_IRQ used once
+Mode_USR 00000010
+
+Symbol: Mode_USR
+   Definitions
+      At line 30 in file lab4-countdown.s
+   Uses
+      At line 68 in file lab4-countdown.s
+Comment: Mode_USR used once
+PINSEL4 E002C010
+
+Symbol: PINSEL4
+   Definitions
+      At line 10 in file lab4-countdown.s
+   Uses
+      At line 153 in file lab4-countdown.s
+      At line 304 in file lab4-countdown.s
+
+T0IR E0004000
+
+Symbol: T0IR
+   Definitions
+      At line 5 in file lab4-countdown.s
+   Uses
+      At line 94 in file lab4-countdown.s
+      At line 290 in file lab4-countdown.s
+
+T0MCR E0004014
+
+Symbol: T0MCR
+   Definitions
+      At line 8 in file lab4-countdown.s
+   Uses
+      At line 109 in file lab4-countdown.s
+Comment: T0MCR used once
+T0MR0 E0004018
+
+Symbol: T0MR0
+   Definitions
+      At line 7 in file lab4-countdown.s
+   Uses
+      At line 101 in file lab4-countdown.s
+Comment: T0MR0 used once
+T0TCR E0004004
+
+Symbol: T0TCR
+
+
+
+ARM Macro Assembler    Page 3 Alphabetic symbol ordering
+Absolute symbols
+
+   Definitions
+      At line 6 in file lab4-countdown.s
+   Uses
+      At line 88 in file lab4-countdown.s
+      At line 346 in file lab4-countdown.s
+
+VICIntEnable FFFFF010
+
+Symbol: VICIntEnable
+   Definitions
+      At line 20 in file lab4-countdown.s
+   Uses
+      At line 145 in file lab4-countdown.s
+      At line 215 in file lab4-countdown.s
+
+VICIntSelect FFFFF00C
+
+Symbol: VICIntSelect
+   Definitions
+      At line 19 in file lab4-countdown.s
+   Uses
+      At line 123 in file lab4-countdown.s
+      At line 193 in file lab4-countdown.s
+
+VICVectAddr FFFFFF00
+
+Symbol: VICVectAddr
+   Definitions
+      At line 23 in file lab4-countdown.s
+   Uses
+      At line 266 in file lab4-countdown.s
+      At line 325 in file lab4-countdown.s
+      At line 362 in file lab4-countdown.s
+
+VICVectAddr0 FFFFF100
+
+Symbol: VICVectAddr0
+   Definitions
+      At line 21 in file lab4-countdown.s
+   Uses
+      At line 140 in file lab4-countdown.s
+      At line 210 in file lab4-countdown.s
+
+VICVectEINT0 0000000E
+
+Symbol: VICVectEINT0
+   Definitions
+      At line 26 in file lab4-countdown.s
+   Uses
+      At line 188 in file lab4-countdown.s
+      At line 189 in file lab4-countdown.s
+
+VICVectPri0 FFFFF200
+
+Symbol: VICVectPri0
+   Definitions
+      At line 22 in file lab4-countdown.s
+   Uses
+      At line 132 in file lab4-countdown.s
+
+
+
+ARM Macro Assembler    Page 4 Alphabetic symbol ordering
+Absolute symbols
+
+      At line 202 in file lab4-countdown.s
+
+VICVectT0 00000004
+
+Symbol: VICVectT0
+   Definitions
+      At line 25 in file lab4-countdown.s
+   Uses
+      At line 118 in file lab4-countdown.s
+      At line 119 in file lab4-countdown.s
+
+22 symbols
+372 symbols in table

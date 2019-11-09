@@ -1,0 +1,6 @@
+--cpu ARM7TDMI
+".\objects\lab2-subroutines.o"
+--scatter ".\lpc2468Flash.sct"
+--summary_stderr --info summarysizes --map --xref --callgraph --symbols
+--info sizes --info totals --info unused --info veneers
+--list ".\Listings\lab2-subroutines.map" -o .\Objects\lab2-subroutines.axf

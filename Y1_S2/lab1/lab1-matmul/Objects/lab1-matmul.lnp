@@ -1,0 +1,6 @@
+--cpu ARM7TDMI
+".\objects\lab1-matmul.o"
+--scatter ".\lpc2468Flash.sct"
+--summary_stderr --info summarysizes --map --xref --callgraph --symbols
+--info sizes --info totals --info unused --info veneers
+--list ".\Listings\lab1-matmul.map" -o .\Objects\lab1-matmul.axf

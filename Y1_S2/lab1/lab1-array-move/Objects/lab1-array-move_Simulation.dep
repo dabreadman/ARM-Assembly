@@ -1,0 +1,2 @@
+Dependencies for Project 'lab1-array-move', Target 'Simulation': (DO NOT MODIFY !)
+F (.\lab1-array-move.s)(0x5C669E33)(--cpu ARM7TDMI --pd "__EVAL SETA 1" -g --apcs=interwork -I C:\Keil_v5\ARM\RV31\INC-I C:\Keil_v5\ARM\CMSIS\Include-I C:\Keil_v5\ARM\Inc\Philips--pd "__UVISION_VERSION SETA 516"--list .\listings\lab1-array-move.lst --xref -o .\objects\lab1-array-move.o --depend .\objects\lab1-array-move.d)

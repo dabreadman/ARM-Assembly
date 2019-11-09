@@ -1,0 +1,90 @@
+Component: ARM Compiler 5.05 update 2 (build 169) Tool: armlink [4d0f33]
+
+==============================================================================
+
+Section Cross References
+
+    lab2-recursion.o(RESET) refers to lab2-recursion.o(globals) for SORTED
+
+
+==============================================================================
+
+Image Symbol Table
+
+    Local Symbols
+
+    Symbol Name                              Value     Ov Type        Size  Object(Section)
+
+    RESET                                    0x00000000   Section      220  lab2-recursion.o(RESET)
+    lab2-recursion.s                         0x00000000   Number         0  lab2-recursion.o ABSOLUTE
+    UNSORT                                   0x000000ac   Data          40  lab2-recursion.o(RESET)
+    globals                                  0x40000000   Section       40  lab2-recursion.o(globals)
+    SORTED                                   0x40000000   Data          40  lab2-recursion.o(globals)
+
+    Global Symbols
+
+    Symbol Name                              Value     Ov Type        Size  Object(Section)
+
+    BuildAttributes$$THM_ISAv1$ARM_ISAv4$S$PE$A:L22$X:L11$S22$IEEE1$IW$USESV6$~STKCKD$USESV7$~SHL$OSPACE$EBA8$STANDARDLIB$EABIv2 0x00000000   Number         0  anon$$obj.o ABSOLUTE
+
+
+
+==============================================================================
+
+Memory Map of the image
+
+  Image Entry point : 0x00000000
+
+  Load Region LR_IROM1 (Base: 0x00000000, Size: 0x00000104, Max: 0x00080000, ABSOLUTE)
+
+    Execution Region ER_IROM1 (Base: 0x00000000, Size: 0x000000dc, Max: 0x00080000, ABSOLUTE)
+
+    Base Addr    Size         Type   Attr      Idx    E Section Name        Object
+
+    0x00000000   0x000000dc   Code   RO            2  * RESET               lab2-recursion.o
+
+
+    Execution Region RW_IRAM1 (Base: 0x40000000, Size: 0x00000028, Max: 0x00010000, ABSOLUTE, UNINIT)
+
+    Base Addr    Size         Type   Attr      Idx    E Section Name        Object
+
+    0x40000000   0x00000028   Data   RW            1    globals             lab2-recursion.o
+
+
+==============================================================================
+
+Image component sizes
+
+
+      Code (inc. data)   RO Data    RW Data    ZI Data      Debug   Object Name
+
+       220         48          0         40          0        292   lab2-recursion.o
+
+    ----------------------------------------------------------------------
+       220         48          0         40          0        292   Object Totals
+         0          0          0          0          0          0   (incl. Generated)
+         0          0          0          0          0          0   (incl. Padding)
+
+    ----------------------------------------------------------------------
+         0          0          0          0          0          0   Library Totals
+         0          0          0          0          0          0   (incl. Padding)
+
+    ----------------------------------------------------------------------
+
+==============================================================================
+
+
+      Code (inc. data)   RO Data    RW Data    ZI Data      Debug   
+
+       220         48          0         40          0        292   Grand Totals
+       220         48          0         40          0        292   ELF Image Totals
+       220         48          0         40          0          0   ROM Totals
+
+==============================================================================
+
+    Total RO  Size (Code + RO Data)                  220 (   0.21kB)
+    Total RW  Size (RW Data + ZI Data)                40 (   0.04kB)
+    Total ROM Size (Code + RO Data + RW Data)        260 (   0.25kB)
+
+==============================================================================
+

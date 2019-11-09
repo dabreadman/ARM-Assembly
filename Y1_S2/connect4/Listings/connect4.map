@@ -1,0 +1,97 @@
+Component: ARM Compiler 5.06 update 6 (build 750) Tool: armlink [4d35ed]
+
+==============================================================================
+
+Section Cross References
+
+    connect4.o(RESET) refers to connect4.o(globals) for BOARD
+
+
+==============================================================================
+
+Image Symbol Table
+
+    Local Symbols
+
+    Symbol Name                              Value     Ov Type        Size  Object(Section)
+
+    RESET                                    0x00000000   Section     1336  connect4.o(RESET)
+    connect4.s                               0x00000000   Number         0  connect4.o ABSOLUTE
+    str_go                                   0x00000410   Data           0  connect4.o(RESET)
+    str_newl                                 0x00000428   Data           0  connect4.o(RESET)
+    str_error                                0x0000042d   Data           0  connect4.o(RESET)
+    str_X                                    0x00000442   Data           0  connect4.o(RESET)
+    str_O                                    0x00000483   Data           0  connect4.o(RESET)
+    str_OWON                                 0x000004c4   Data           0  connect4.o(RESET)
+    str_XWON                                 0x000004ce   Data           0  connect4.o(RESET)
+    str_EVEN                                 0x000004d7   Data           0  connect4.o(RESET)
+    globals                                  0x40000000   Section       42  connect4.o(globals)
+    BOARD                                    0x40000000   Data           7  connect4.o(globals)
+
+    Global Symbols
+
+    Symbol Name                              Value     Ov Type        Size  Object(Section)
+
+    BuildAttributes$$THM_ISAv1$ARM_ISAv4$S$PE$A:L22$X:L11$S22$IEEE1$IW$USESV6$~STKCKD$USESV7$~SHL$OSPACE$EBA8$STANDARDLIB$EABIv2 0x00000000   Number         0  anon$$obj.o ABSOLUTE
+
+
+
+==============================================================================
+
+Memory Map of the image
+
+  Image Entry point : 0x00000000
+
+  Load Region LR_IROM1 (Base: 0x00000000, Size: 0x00000564, Max: 0x00080000, ABSOLUTE)
+
+    Execution Region ER_IROM1 (Exec base: 0x00000000, Load base: 0x00000000, Size: 0x00000538, Max: 0x00080000, ABSOLUTE)
+
+    Exec Addr    Load Addr    Size         Type   Attr      Idx    E Section Name        Object
+
+    0x00000000   0x00000000   0x00000538   Code   RO            2  * RESET               connect4.o
+
+
+    Execution Region RW_IRAM1 (Exec base: 0x40000000, Load base: 0x00000538, Size: 0x0000002c, Max: 0x00010000, ABSOLUTE, UNINIT)
+
+    Exec Addr    Load Addr    Size         Type   Attr      Idx    E Section Name        Object
+
+    0x40000000   0x00000538   0x0000002a   Data   RW            1    globals             connect4.o
+
+
+==============================================================================
+
+Image component sizes
+
+
+      Code (inc. data)   RO Data    RW Data    ZI Data      Debug   Object Name
+
+      1336        296          0         42          0        508   connect4.o
+
+    ----------------------------------------------------------------------
+      1336        296          0         44          0        508   Object Totals
+         0          0          0          0          0          0   (incl. Generated)
+         0          0          0          2          0          0   (incl. Padding)
+
+    ----------------------------------------------------------------------
+         0          0          0          0          0          0   Library Totals
+         0          0          0          0          0          0   (incl. Padding)
+
+    ----------------------------------------------------------------------
+
+==============================================================================
+
+
+      Code (inc. data)   RO Data    RW Data    ZI Data      Debug   
+
+      1336        296          0         44          0        508   Grand Totals
+      1336        296          0         44          0        508   ELF Image Totals
+      1336        296          0         44          0          0   ROM Totals
+
+==============================================================================
+
+    Total RO  Size (Code + RO Data)                 1336 (   1.30kB)
+    Total RW  Size (RW Data + ZI Data)                44 (   0.04kB)
+    Total ROM Size (Code + RO Data + RW Data)       1380 (   1.35kB)
+
+==============================================================================
+

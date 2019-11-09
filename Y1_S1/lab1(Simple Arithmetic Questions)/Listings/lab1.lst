@@ -1,0 +1,138 @@
+
+
+
+ARM Macro Assembler    Page 1 
+
+
+    1 00000000         ;
+    2 00000000         ; CS1021 2018/2019 Lab 1
+    3 00000000         ; 
+    4 00000000         
+    5 00000000                 AREA             RESET, CODE, READONLY
+    6 00000000                 ENTRY
+    7 00000000         
+    8 00000000         ;
+    9 00000000         ; start of code
+   10 00000000         ;
+   11 00000000         ;LDR R1, =5    ; x = 5
+   12 00000000         ;LDR R2, =6  ; y = 6
+   13 00000000         ;LDR R3, =2  ;  z = 2
+   14 00000000         
+   15 00000000         ;;
+   16 00000000         ;; compute x*x + y + 4 (35 or 0x23)
+   17 00000000         ;;
+   18 00000000         ;MUL R0, R1, R1 ; R0 = x*x
+   19 00000000         ;ADD R0, R0, R2 ; R0 = x*x + y
+   20 00000000         ;ADD R0, R0, #4 ; R0 = x*x + y + 4
+   21 00000000         
+   22 00000000         ;;
+   23 00000000         ;;  (a) compute 3* x*x + 5*x
+   24 00000000         ;;
+   25 00000000         
+   26 00000000         ;MUL R0,R1,R1  ; R0 = x*x
+   27 00000000         ;MOV R4,#3  ; R4 = 3
+   28 00000000         ;MUL R0,R4,R0 ; R0 = 3* x*x
+   29 00000000         ;MOV R4,#5  ; R4 = 5
+   30 00000000         ;MUL R4,R1,R4 ; R4 = 5*x
+   31 00000000         ;ADD R0,R0,R4  ; R0 = 3* x*x + 5* x
+   32 00000000         
+   33 00000000         ;;
+   34 00000000         ;;  (b) compute 2* x*x + 6* x*y + 3* y*y
+   35 00000000         ;;
+   36 00000000         
+   37 00000000         ;MUL R0,R1,R1 ; R0 = x*x
+   38 00000000         ;MUL R4,R2,R2 ; R4 = y*y
+   39 00000000         ;MOV R5,#2  ; R5 = 2
+   40 00000000         ;MUL R0,R5,R0 ; R0 = 2* x*x
+   41 00000000         ;MOV R5,#3  ; R5 = 3
+   42 00000000         ;MUL R4,R5,R4 ; R4 = 3* y*y
+   43 00000000         ;ADD R0,R0,R4 ; R0 = 2* x*x + 3* y*y
+   44 00000000         ;MUL R4,R1,R2   ; R4 = x*y
+   45 00000000         ;MUL R4,R2,R4 ; R4 = 6* x*y
+   46 00000000         ;ADD R0,R0,R4 ; R0 = 2* x*x + 6* x*y + 3* y*y
+   47 00000000         
+   48 00000000         ;;
+   49 00000000         ;; (c) compute x*x*x - 4* x*x + 3* x + 8
+   50 00000000         ;;
+   51 00000000         
+   52 00000000         ;MOV R5,#4  ; R5 = 4
+   53 00000000         ;MUL R4,R1,R1  ; R4 = x*x
+   54 00000000         ;MUL R5,R4,R5 ; R5 = 4* x*x
+   55 00000000         ;MUL R0,R1,R4 ; R0 = x*x*x
+   56 00000000         ;SUB R0,R0,R5 ; R0 = x*x*x - 4* x*x
+   57 00000000         ;MOV R4,#3  ; R4 = 3
+   58 00000000         ;MUL R4,R1,R4 ; R4 = 3*x
+   59 00000000         ;ADD R0,R0,R4 ; R0 = x*x*x - 4* x*x + 3*x
+
+
+
+ARM Macro Assembler    Page 2 
+
+
+   60 00000000         ;ADD R0,R0,#8 ; R0 = x*x*x - 4* x*x + 3*x + 8
+   61 00000000         
+   62 00000000         ;;
+   63 00000000         ;; (d) compute 3* x*x*x*x - 5* x - 16* y*y*y*y* z*z*z*z
+   64 00000000         ;;
+   65 00000000         
+   66 00000000         
+   67 00000000         ;MUL R4,R1,R1  ; R4 = x*x
+   68 00000000         ;MUL R0,R4,R4 ; R0 = x*x*x*x
+   69 00000000         ;MOV R4,#3  ; R4 = 3
+   70 00000000         ;MUL R0,R4,R0 ; RO = 3* x*x*x*x
+   71 00000000         ;MOV R5,#5  ; R5 = 5
+   72 00000000         ;MUL R5,R1,R5 ; R5 = 5* x
+   73 00000000         ;SUB R0,R0,R5 ; R0 = 3* x*x*x*x - 5* x
+   74 00000000         ;MUL R4,R2,R2 ; R4 = y*y
+   75 00000000         ;MUL R5,R4,R4 ; R5 = y*y*y*y
+   76 00000000         ;MUL R4,R3,R3 ; R4 = z*z
+   77 00000000         ;MUL R6,R4,R4 ; R6 = z*z*z*z
+   78 00000000         ;MOV R7,#16  ; R7 = 16
+   79 00000000         ;MUL R4,R5,R6 ; R4 = y*y*y*y* z*z*z*z
+   80 00000000         ;MUL R4,R7,R4 ; R4 = 16* y*y*y*y* z*z*z*z
+   81 00000000         ;SUB R0,R0,R4  ; R0 = 3* x*x*x*x - 5* x - 16* y*y*y*y* z
+                       *z*z*z
+   82 00000000         
+   83 00000000 E59F1004        LDR              R1, =0x12345678 
+                                                            ; load test value
+   84 00000004 E0514001        SUBS             R4,R1,R1
+   85 00000008         
+   86 00000008         
+   87 00000008         
+   88 00000008         
+   89 00000008         
+   90 00000008         
+   91 00000008 EAFFFFFE 
+                       L       B                L           ; infinite loop to 
+                                                            end programme
+   92 0000000C         
+   93 0000000C                 END
+              12345678 
+Command Line: --debug --xref --diag_suppress=9931 --apcs=interwork --depend=.\o
+bjects\lab1.d -o.\objects\lab1.o -IC:\Keil_v5\ARM\RV31\INC -IC:\Keil_v5\ARM\CMS
+IS\Include -IC:\Keil_v5\ARM\Inc\Philips --predefine="__EVAL SETA 1" --predefine
+="__UVISION_VERSION SETA 516" --list=.\listings\lab1.lst lab1.s
+
+
+
+ARM Macro Assembler    Page 1 Alphabetic symbol ordering
+Relocatable symbols
+
+L 00000008
+
+Symbol: L
+   Definitions
+      At line 91 in file lab1.s
+   Uses
+      At line 91 in file lab1.s
+Comment: L used once
+RESET 00000000
+
+Symbol: RESET
+   Definitions
+      At line 5 in file lab1.s
+   Uses
+      None
+Comment: RESET unused
+2 symbols
+336 symbols in table

@@ -1,0 +1,2 @@
+Dependencies for Project 'lab1-addressing-modes', Target 'Simulation': (DO NOT MODIFY !)
+F (.\lab1-addressing-modes.s)(0x5C66A824)(--cpu ARM7TDMI --pd "__EVAL SETA 1" -g --apcs=interwork -I C:\Keil_v5\ARM\RV31\INC-I C:\Keil_v5\ARM\CMSIS\Include-I C:\Keil_v5\ARM\Inc\Philips--pd "__UVISION_VERSION SETA 516"--list .\listings\lab1-addressing-modes.lst --xref -o .\objects\lab1-addressing-modes.o --depend .\objects\lab1-addressing-modes.d)

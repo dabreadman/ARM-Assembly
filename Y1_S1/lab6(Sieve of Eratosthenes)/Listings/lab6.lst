@@ -1,0 +1,607 @@
+
+
+
+ARM Macro Assembler    Page 1 
+
+
+    1 00000000         ;
+    2 00000000         ; CS1021 2018/2019 Lab 6
+    3 00000000         ;
+    4 00000000         ; RAM @ 0x4000000 sz = 0x10000 (64K)
+    5 00000000         ;
+    6 00000000         
+    7 00000000         ;
+    8 00000000         ; hardware registers
+    9 00000000         ;
+   10 00000000         
+   11 00000000 E002C000 
+                       PINSEL0 EQU              0xE002C000
+   12 00000000         
+   13 00000000 E000C000 
+                       U0RBR   EQU              0xE000C000
+   14 00000000 E000C000 
+                       U0THR   EQU              0xE000C000
+   15 00000000 E000C00C 
+                       U0LCR   EQU              0xE000C00C
+   16 00000000 E000C014 
+                       U0LSR   EQU              0xE000C014
+   17 00000000         
+   18 00000000         
+   19 00000000                 AREA             RESET, CODE, READONLY
+   20 00000000                 ENTRY
+   21 00000000         
+   22 00000000         ; 
+   23 00000000         ; hardware initialisation
+   24 00000000         ;
+   25 00000000 E59FD178        LDR              R13, =0x40010000 ; initialse SP
+                                                            
+   26 00000004 E59F0178        LDR              R0, =PINSEL0 ; enable UART0 TxD
+                                                             and RxD signals
+   27 00000008 E3A01050        MOV              R1, #0x50
+   28 0000000C E5C01000        STRB             R1, [R0]
+   29 00000010 E59F0170        LDR              R0, =U0LCR  ; 7 data bits + par
+                                                            ity
+   30 00000014 E3A01002        LDR              R1, =0x02
+   31 00000018 E5C01000        STRB             R1, [R0]
+   32 0000001C         
+   33 0000001C         ;
+   34 0000001C         ;  set bits start
+   35 0000001C         ;
+   36 0000001C         
+   37 0000001C E3A0100A        LDR              R1,=0xA     ; R1 = N
+   38 00000020 E1A03001        MOV              R3,R1       ; duplicates R1
+   39 00000024 E3A00101        LDR              R0,=0x40000000 ; Array starting
+                                                             address
+   40 00000028         
+   41 00000028         
+   42 00000028 E3510020 
+                       STRWORD CMP              R1,#32      ; if (N >= 32)
+   43 0000002C BA000003        BLT              STRHWORD
+   44 00000030 E3E02000        LDR              R2,=0xFFFFFFFF ; fill 32 1`s (w
+                                                            ord)
+   45 00000034 E4802004        STR              R2,[R0],#4  ; store into memory
+                                                             AND address increm
+                                                            ents by 4
+   46 00000038 E2411020        SUB              R1,#32      ; N = N - 32
+
+
+
+ARM Macro Assembler    Page 2 
+
+
+   47 0000003C EAFFFFF9        B                STRWORD
+   48 00000040         
+   49 00000040 E3510010 
+                       STRHWORD
+                               CMP              R1,#16      ; if (N >=16)
+   50 00000044 BA000003        BLT              STRBYTE
+   51 00000048 E59F213C        LDR              R2,=0xFFFF  ; fill 16 1`s (half
+                                                            word) 
+   52 0000004C E0C020B2        STRH             R2,[R0],#2  ; store into memory
+                                                             AND address increm
+                                                            ents by 2
+   53 00000050 E2411010        SUB              R1,#16      ; N = N - 16
+   54 00000054 EAFFFFF9        B                STRHWORD
+   55 00000058         
+   56 00000058 E3510008 
+                       STRBYTE CMP              R1,#8       ; if (N >= 8)
+   57 0000005C BA000003        BLT              STRBITINI
+   58 00000060 E3A020FF        LDR              R2,=0xFF    ; fill 8 1`s (byte)
+                                                            
+   59 00000064 E4C02001        STRB             R2,[R0],#1  ; store into memory
+                                                             AND address increm
+                                                            ents by 1
+   60 00000068 E2411008        SUB              R1,#8       ; N = N - 8
+   61 0000006C EAFFFFF9        B                STRBYTE
+   62 00000070         
+   63 00000070 E3A02000 
+                       STRBITINI
+                               MOV              R2,#0       ; initialize R2 =0
+   64 00000074 E5C02000        STRB             R2,[R0]     ; initialize memory
+                                                             to access
+   65 00000078         
+   66 00000078 E3510001 
+                       STRBIT  CMP              R1,#1       ; if (N >=1)
+   67 0000007C BA000005        BLT              CHECK
+   68 00000080 E5D02000        LDRB             R2,[R0]     ; loads content fro
+                                                            m memory
+   69 00000084 E1A02082        MOV              R2,R2,LSL #1 ; left shift conte
+                                                            nt by 1 to left
+   70 00000088 E2822001        ADD              R2,R2,#1    ; set the LSBit to 
+                                                            1
+   71 0000008C E5C02000        STRB             R2,[R0]     ; store into memory
+                                                            
+   72 00000090 E2411001        SUB              R1,R1,#1    ; N = N - 1
+   73 00000094 EAFFFFF7        B                STRBIT
+   74 00000098         
+   75 00000098         ;
+   76 00000098         ;  set bits ends
+   77 00000098         ;
+   78 00000098         
+   79 00000098 E3A04000 
+                       CHECK   MOV              R4,#0       ; R4 = count      |
+                                                            count++;
+   80 0000009C E3A09101        LDR              R9,=0x40000000
+   81 000000A0 E1A01003        MOV              R1,R3       ; R1 = N
+   82 000000A4 E3A03002        MOV              R3,#2       ; R3 = p   |for (in
+                                                            t p = 2; p <= N; p+
+                                                            +) {
+   83 000000A8 E1530001 
+                       FOR0    CMP              R3,R1       ; if (p <= N)
+
+
+
+ARM Macro Assembler    Page 3 
+
+
+   84 000000AC 8A000018        BHI              EXITFOR0
+   85 000000B0         
+   86 000000B0         
+   87 000000B0         
+   88 000000B0 E3A05101        LDR              R5,=0x40000000 
+                                                            ; starting address
+   89 000000B4 E3A05001        MOV              R5,#1       ; mask
+   90 000000B8 E1A061A1        MOV              R6,R1,LSR #3 ; R6 = address inc
+                                                            rement
+   91 000000BC E2012007        AND              R2,R1,#7    ; R2 = p % 8
+   92 000000C0 E0899006        ADD              R9,R9,R6
+   93 000000C4 E5D90000        LDRB             R0,[R9]
+   94 000000C8 E0050210        AND              R0,R5,R0, LSL R2
+   95 000000CC E5C90000        STRB             R0,[R9]
+   96 000000D0 E3550000        CMP              R5,#0       ; if (sieve[p]) 
+   97 000000D4 0AFFFFF3        BEQ              FOR0
+   98 000000D8 E2844001        ADD              R4,R4,#1    ; count++
+   99 000000DC E3A05002        MOV              R5,#2       ; n = 2
+  100 000000E0         
+  101 000000E0 E3A09101 
+                       FOR1    LDR              R9,=0x40000000
+  102 000000E4 E3A08001        MOV              R8,#1       ; n
+  103 000000E8 E3A05001        MOV              R5,#1       ; mask
+  104 000000EC E0060593        MUL              R6,R3,R5    ; k = p * n
+  105 000000F0 E1560001        CMP              R6,R1       ; if(k <= N)
+  106 000000F4 8AFFFFEB        BHI              FOR0
+  107 000000F8 E1A071A6        MOV              R7,R6,LSR #3 ; R6 = address inc
+                                                            rement
+  108 000000FC E2062007        AND              R2,R6,#7    ; R2 = k % 8
+  109 00000100 E5D90000        LDRB             R0,[R9]     ; loads
+  110 00000104 E1C00215        BIC              R0,R5,LSL R2 ; clears
+  111 00000108 E5C90000        STRB             R0,[R9]     ; stores
+  112 0000010C E2888001        ADD              R8,R8,#1    ; n++
+  113 00000110 EAFFFFF2        B                FOR1
+  114 00000114         
+  115 00000114         
+  116 00000114         
+  117 00000114         
+  118 00000114         EXITFOR0
+  119 00000114         
+  120 00000114         
+  121 00000114         
+  122 00000114         
+  123 00000114         
+  124 00000114         
+  125 00000114         
+  126 00000114         
+  127 00000114         
+  128 00000114         
+  129 00000114         
+  130 00000114         
+  131 00000114         
+  132 00000114         
+  133 00000114         
+  134 00000114         
+  135 00000114         
+  136 00000114         
+  137 00000114         
+  138 00000114         
+
+
+
+ARM Macro Assembler    Page 4 
+
+
+  139 00000114         
+  140 00000114         
+  141 00000114         
+  142 00000114         ;LDR R1,=0x49  ; R1 = N
+  143 00000114         ;LDR R0,=0x40000000 ; Array starting address
+  144 00000114         
+  145 00000114         
+  146 00000114         ;STRWORD  CMP R1,#32   ; if (N >= 32)
+  147 00000114         ;BLT STRHWORD
+  148 00000114         ;LDR R2,=0xFFFFFFFF ; fill 32 1`s (word)
+  149 00000114         ;STR R2,[R0],#4  ; store into memory AND address increme
+                       nts by 4
+  150 00000114         ;SUB R1,#32   ; N = N - 32
+  151 00000114         ;B STRWORD
+  152 00000114         
+  153 00000114         ;STRHWORD CMP R1,#16   ; if (N >=16)
+  154 00000114         ;BLT STRBYTE
+  155 00000114         ;LDR R2,=0xFFFF  ; fill 16 1`s (halfword) 
+  156 00000114         ;STRH R2,[R0],#2  ; store into memory AND address increm
+                       etns by 2
+  157 00000114         ;SUB R1,#16   ; N = N - 16
+  158 00000114         ;B STRHWORD
+  159 00000114         
+  160 00000114         ;STRBYTE     CMP R1,#8   ; if (N >= 8)
+  161 00000114         ;BLT STRBITINI
+  162 00000114         ;LDR R2,=0xFF  ; fill 8 1`s (byte)
+  163 00000114         ;STRB R2,[R0],#1  ; store into memory AND address increm
+                       ents by 1
+  164 00000114         ;SUB R1,#8   ; N = N - 8
+  165 00000114         ;B STRBYTE
+  166 00000114         
+  167 00000114         ;STRBITINI MOV R2,#0   ; initialize R2 =0
+  168 00000114         ;STRB R2,[R0]  ; initialize memory to access
+  169 00000114         ;STRBIT  CMP R1,#1   ; if (N >=1)
+  170 00000114         ;BLT CLEAR01
+  171 00000114         ;LDRB R2,[R0]  ; loads content from memory
+  172 00000114         ;MOV R2,R2,LSL #1 ; left shift content by 1 to left
+  173 00000114         ;ADD R2,R2,#1  ; set the LSBit to 1
+  174 00000114         ;STRB R2,[R0]  ; store into memory
+  175 00000114         ;SUB R1,R1,#1  ; N = N - 1
+  176 00000114         ;B STRBIT
+  177 00000114         
+  178 00000114         ;;
+  179 00000114         ;;  set bits ends
+  180 00000114         ;;
+  181 00000114         
+  182 00000114         
+  183 00000114         ;CLEAR01   LDR R3,=0x40000000 ; Array starting address
+  184 00000114         ;LDRB R2,[R3]  ; loads content from 1st byte
+  185 00000114         ;MOV R2,R2, LSL #2 ; clears 2 LSBit
+  186 00000114         ;STRB R2,[R3]  ; store into memory
+  187 00000114         ;;clears first 2 bits
+  188 00000114         
+  189 00000114         ;CHECKINI  MOV R4,#0   ; R4 = cnt 
+  190 00000114         ;MOV R6,#0   ; R6 = current number in decimal
+  191 00000114         ;MOV R7,#1   ; Mask
+  192 00000114         ;LDR R10,=0x10000000 ; Leftmost set bit
+  193 00000114         
+  194 00000114         ;CHECKL   LDRB R2,[R3]  ; loads bit to R2   
+
+
+
+ARM Macro Assembler    Page 5 
+
+
+  195 00000114         ;AND R8,R2,R7,LSL R6  ; checks if bit is set
+  196 00000114         ;CMP R8,#0   ; if (bit is set)
+  197 00000114         ;BHI CLEAR
+  198 00000114         ;CMP R7,R10   ; if (mask reached leftmost position)
+  199 00000114         ;BEQ RESET0
+  200 00000114         ;MOV R7,R7,LSL #1
+  201 00000114         ;ADD R6,R6,#1  ; decimal increments
+  202 00000114         ;B CHECKL
+  203 00000114         
+  204 00000114         ;RESET0   MOV R7,#1    
+  205 00000114         ;ADD R6,R6,#1  ; decimal increments
+  206 00000114         ;ADD R3,R3,#1  ; address increments
+  207 00000114         ;B CHECKL
+  208 00000114         
+  209 00000114         ;CLEAR    ADD R4,R4,#1  ; cnt++
+  210 00000114         ;MOV R11,#2   ; n = 2
+  211 00000114         ;CLEARL   LDR R2,=0x40000000 ; R0 = starting address
+  212 00000114         ;MOV R7,#1   ; mask
+  213 00000114         ;MUL R12,R6,R11  ; R6 = k = p*n
+  214 00000114         ;CMP R12,R1   ; if (k <= N)
+  215 00000114         ;BHI CHECKL
+  216 00000114         ;MOV R5,R6,LSR #3 ; R5 = DECIMAL/8
+  217 00000114         ;ADD R2,R2,R5  ; address increments by R5
+  218 00000114         ;LDRB R0,[R2]
+  219 00000114         ;AND R9,R6,#0x7  ; R9 = k % 8
+  220 00000114         ;MOV R7,R7,LSL R9 
+  221 00000114         ;BIC R0,R0,R7  ; sieve[k] = 0;
+  222 00000114         ;STRB R0,[R2],#1  ; stores into memory AND post-incremen
+                       t
+  223 00000114         ;ADD R11,R11,#1  ; n++
+  224 00000114         ;B CLEARL
+  225 00000114         
+  226 00000114         
+  227 00000114         
+  228 00000114         
+  229 00000114 EAFFFFFE 
+                       STOP    B                STOP
+  230 00000118         
+  231 00000118         ;
+  232 00000118         ; subroutines
+  233 00000118         ; 
+  234 00000118         ; GET
+  235 00000118         ;
+  236 00000118         ; leaf function which returns ASCII character typed in U
+                       ART #1 window in R0
+  237 00000118         ;
+  238 00000118 E59F1070 
+                       GET     LDR              R1, =U0LSR  ; R1 -> U0LSR (Line
+                                                             Status Register)
+  239 0000011C E5910000 
+                       GET0    LDR              R0, [R1]    ; wait until
+  240 00000120 E2100001        ANDS             R0, #0x01   ; receiver data
+  241 00000124 0AFFFFFC        BEQ              GET0        ; ready
+  242 00000128 E59F1064        LDR              R1, =U0RBR  ; R1 -> U0RBR (Rece
+                                                            iver Buffer Registe
+                                                            r)
+  243 0000012C E5D10000        LDRB             R0, [R1]    ; get received data
+                                                            
+  244 00000130 E12FFF1E        BX               LR          ; return
+
+
+
+ARM Macro Assembler    Page 6 
+
+
+  245 00000134         
+  246 00000134         ; 
+  247 00000134         ; PUT
+  248 00000134         ;
+  249 00000134         ; leaf function which sends ASCII character in R0 to UAR
+                       T #1 window
+  250 00000134         ;
+  251 00000134 E59F1054 
+                       PUT     LDR              R1, =U0LSR  ; R1 -> U0LSR (Line
+                                                             Status Register)
+  252 00000138 E5D11000        LDRB             R1, [R1]    ; wait until transm
+                                                            it
+  253 0000013C E2111020        ANDS             R1, R1, #0x20 
+                                                            ; holding register
+  254 00000140 0AFFFFFB        BEQ              PUT         ; empty
+  255 00000144 E59F1048        LDR              R1, =U0THR  ; R1 -> U0THR
+  256 00000148 E5C10000        STRB             R0, [R1]    ; output charcter
+  257 0000014C E59F103C 
+                       PUT0    LDR              R1, =U0LSR  ; R1 -> U0LSR
+  258 00000150 E5D11000        LDRB             R1, [R1]    ; wait until 
+  259 00000154 E2111040        ANDS             R1, R1, #0x40 ; transmitter
+  260 00000158 0AFFFFFB        BEQ              PUT0        ; empty (data flush
+                                                            ed)
+  261 0000015C E12FFF1E        BX               LR          ; return
+  262 00000160         
+  263 00000160         ; 
+  264 00000160         ; PUTS
+  265 00000160         ;
+  266 00000160         ; sends NUL terminated ASCII string (address in R0) to U
+                       ART #1 window
+  267 00000160         ;
+  268 00000160 E92D4010 
+                       PUTS    PUSH             {R4, LR}    ; push R4 and LR
+  269 00000164 E1A04000        MOV              R4, R0      ; copy R0
+  270 00000168 E4D40001 
+                       PUTS0   LDRB             R0, [R4], #1 ; get character + 
+                                                            increment R4
+  271 0000016C E3500000        CMP              R0, #0      ; 0?
+  272 00000170 0A000001        BEQ              PUTS1       ; return
+  273 00000174 EBFFFFEE        BL               PUT         ; put character
+  274 00000178 EAFFFFFA        B                PUTS0       ; next character
+  275 0000017C E8BD8010 
+                       PUTS1   POP              {R4, PC}    ; pop R4 and PC
+  276 00000180         
+  277 00000180         
+  278 00000180         
+  279 00000180         
+  280 00000180         
+  281 00000180                 END
+              40010000 
+              E002C000 
+              E000C00C 
+              0000FFFF 
+              E000C014 
+              E000C000 
+Command Line: --debug --xref --diag_suppress=9931 --apcs=interwork --depend=.\o
+bjects\lab6.d -o.\objects\lab6.o -IC:\Keil_v5\ARM\RV31\INC -IC:\Keil_v5\ARM\CMS
+IS\Include -IC:\Keil_v5\ARM\Inc\Philips --predefine="__EVAL SETA 1" --predefine
+="__UVISION_VERSION SETA 516" --list=.\listings\lab6.lst lab6.s
+
+
+
+ARM Macro Assembler    Page 1 Alphabetic symbol ordering
+Relocatable symbols
+
+CHECK 00000098
+
+Symbol: CHECK
+   Definitions
+      At line 79 in file lab6.s
+   Uses
+      At line 67 in file lab6.s
+Comment: CHECK used once
+EXITFOR0 00000114
+
+Symbol: EXITFOR0
+   Definitions
+      At line 118 in file lab6.s
+   Uses
+      At line 84 in file lab6.s
+Comment: EXITFOR0 used once
+FOR0 000000A8
+
+Symbol: FOR0
+   Definitions
+      At line 83 in file lab6.s
+   Uses
+      At line 97 in file lab6.s
+      At line 106 in file lab6.s
+
+FOR1 000000E0
+
+Symbol: FOR1
+   Definitions
+      At line 101 in file lab6.s
+   Uses
+      At line 113 in file lab6.s
+Comment: FOR1 used once
+GET 00000118
+
+Symbol: GET
+   Definitions
+      At line 238 in file lab6.s
+   Uses
+      None
+Comment: GET unused
+GET0 0000011C
+
+Symbol: GET0
+   Definitions
+      At line 239 in file lab6.s
+   Uses
+      At line 241 in file lab6.s
+Comment: GET0 used once
+PUT 00000134
+
+Symbol: PUT
+   Definitions
+      At line 251 in file lab6.s
+   Uses
+      At line 254 in file lab6.s
+      At line 273 in file lab6.s
+
+PUT0 0000014C
+
+
+
+ARM Macro Assembler    Page 2 Alphabetic symbol ordering
+Relocatable symbols
+
+
+Symbol: PUT0
+   Definitions
+      At line 257 in file lab6.s
+   Uses
+      At line 260 in file lab6.s
+Comment: PUT0 used once
+PUTS 00000160
+
+Symbol: PUTS
+   Definitions
+      At line 268 in file lab6.s
+   Uses
+      None
+Comment: PUTS unused
+PUTS0 00000168
+
+Symbol: PUTS0
+   Definitions
+      At line 270 in file lab6.s
+   Uses
+      At line 274 in file lab6.s
+Comment: PUTS0 used once
+PUTS1 0000017C
+
+Symbol: PUTS1
+   Definitions
+      At line 275 in file lab6.s
+   Uses
+      At line 272 in file lab6.s
+Comment: PUTS1 used once
+RESET 00000000
+
+Symbol: RESET
+   Definitions
+      At line 19 in file lab6.s
+   Uses
+      None
+Comment: RESET unused
+STOP 00000114
+
+Symbol: STOP
+   Definitions
+      At line 229 in file lab6.s
+   Uses
+      At line 229 in file lab6.s
+Comment: STOP used once
+STRBIT 00000078
+
+Symbol: STRBIT
+   Definitions
+      At line 66 in file lab6.s
+   Uses
+      At line 73 in file lab6.s
+Comment: STRBIT used once
+STRBITINI 00000070
+
+Symbol: STRBITINI
+   Definitions
+
+
+
+ARM Macro Assembler    Page 3 Alphabetic symbol ordering
+Relocatable symbols
+
+      At line 63 in file lab6.s
+   Uses
+      At line 57 in file lab6.s
+Comment: STRBITINI used once
+STRBYTE 00000058
+
+Symbol: STRBYTE
+   Definitions
+      At line 56 in file lab6.s
+   Uses
+      At line 50 in file lab6.s
+      At line 61 in file lab6.s
+
+STRHWORD 00000040
+
+Symbol: STRHWORD
+   Definitions
+      At line 49 in file lab6.s
+   Uses
+      At line 43 in file lab6.s
+      At line 54 in file lab6.s
+
+STRWORD 00000028
+
+Symbol: STRWORD
+   Definitions
+      At line 42 in file lab6.s
+   Uses
+      At line 47 in file lab6.s
+Comment: STRWORD used once
+18 symbols
+
+
+
+ARM Macro Assembler    Page 1 Alphabetic symbol ordering
+Absolute symbols
+
+PINSEL0 E002C000
+
+Symbol: PINSEL0
+   Definitions
+      At line 11 in file lab6.s
+   Uses
+      At line 26 in file lab6.s
+Comment: PINSEL0 used once
+U0LCR E000C00C
+
+Symbol: U0LCR
+   Definitions
+      At line 15 in file lab6.s
+   Uses
+      At line 29 in file lab6.s
+Comment: U0LCR used once
+U0LSR E000C014
+
+Symbol: U0LSR
+   Definitions
+      At line 16 in file lab6.s
+   Uses
+      At line 238 in file lab6.s
+      At line 251 in file lab6.s
+      At line 257 in file lab6.s
+
+U0RBR E000C000
+
+Symbol: U0RBR
+   Definitions
+      At line 13 in file lab6.s
+   Uses
+      At line 242 in file lab6.s
+Comment: U0RBR used once
+U0THR E000C000
+
+Symbol: U0THR
+   Definitions
+      At line 14 in file lab6.s
+   Uses
+      At line 255 in file lab6.s
+Comment: U0THR used once
+5 symbols
+357 symbols in table

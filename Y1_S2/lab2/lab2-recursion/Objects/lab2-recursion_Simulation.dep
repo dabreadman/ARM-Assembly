@@ -1,0 +1,2 @@
+Dependencies for Project 'lab2-recursion', Target 'Simulation': (DO NOT MODIFY !)
+F (.\lab2-recursion.s)(0x5C6D6A82)(--cpu ARM7TDMI --pd "__EVAL SETA 1" -g --apcs=interwork -I C:\Keil_v5\ARM\RV31\INC-I C:\Keil_v5\ARM\CMSIS\Include-I C:\Keil_v5\ARM\Inc\Philips--pd "__UVISION_VERSION SETA 516"--list .\listings\lab2-recursion.lst --xref -o .\objects\lab2-recursion.o --depend .\objects\lab2-recursion.d)

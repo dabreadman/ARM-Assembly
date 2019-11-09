@@ -1,0 +1,6 @@
+--cpu ARM7TDMI
+".\objects\lab1-addressing-modes.o"
+--scatter ".\lpc2468Flash.sct"
+--summary_stderr --info summarysizes --map --xref --callgraph --symbols
+--info sizes --info totals --info unused --info veneers
+--list ".\Listings\lab1-addressing-modes.map" -o .\Objects\lab1-addressing-modes.axf

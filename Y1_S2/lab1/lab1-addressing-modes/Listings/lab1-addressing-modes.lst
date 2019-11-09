@@ -1,0 +1,268 @@
+
+
+
+ARM Macro Assembler    Page 1 
+
+
+    1 00000000         ;
+    2 00000000         ; CS1022 Introduction to Computing II 2018/2019
+    3 00000000         ; Lab 1 - Addressing Modes
+    4 00000000         ;
+    5 00000000         
+    6 00000000 0000000A 
+                       N       EQU              10
+    7 00000000         
+    8 00000000                 AREA             globals,DATA, READWRITE
+    9 00000000         
+   10 00000000         ; N word-size values
+   11 00000000         
+   12 00000000 00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00       ARRAY   SPACE            N*4         ; N words (4 bytes 
+                                                            each)
+   13 00000028         
+   14 00000028         
+   15 00000028                 AREA             RESET, CODE, READONLY
+   16 00000000                 ENTRY
+   17 00000000         
+   18 00000000         ; for convenience, let's initialise test array [0, 1, 2,
+                        ... , N-1]
+   19 00000000         
+   20 00000000 E59F004C        LDR              R0, = 0x40001000
+   21 00000004 E3A01000        LDR              R1, =0
+   22 00000008 E351000A 
+                       L1      CMP              R1, #N
+   23 0000000C 2A000002        BHS              L2
+   24 00000010 E7801101        STR              R1, [R0, R1, LSL #2]
+   25 00000014 E2811001        ADD              R1,R1,#1
+   26 00000018 EAFFFFFA        B                L1
+   27 0000001C         L2
+   28 0000001C         
+   29 0000001C         ; initialise registers for your program
+   30 0000001C         
+   31 0000001C         ;
+   32 0000001C         ; part i
+   33 0000001C         ;
+   34 0000001C         
+   35 0000001C         ;MOV R2,#N   
+   36 0000001C         ;MOV R4,#4         
+   37 0000001C         ;MUL R2,R4,R2         ; total size in bytes
+   38 0000001C         ;ADD R2,R2,R0   ; end address
+   39 0000001C         ;LDR R0, =0x40001000  ; array start address
+   40 0000001C         
+   41 0000001C         
+   42 0000001C         
+
+
+
+ARM Macro Assembler    Page 2 
+
+
+   43 0000001C         ;FORI CMP R0,R2  ; if (!ended)
+   44 0000001C         ;BHS EFORI
+   45 0000001C         ;LDR R3,[R0]  ; loads from memory
+   46 0000001C         ;MUL R5,R3,R3; ; squares
+   47 0000001C         ;STR R5,[R0]  ; stores into memory
+   48 0000001C         ;ADD R0,R0,#4 ; increments address
+   49 0000001C         
+   50 0000001C         ;B FORI
+   51 0000001C         ;EFORI 
+   52 0000001C         
+   53 0000001C         
+   54 0000001C         ;
+   55 0000001C         ; part ii ##
+   56 0000001C         ;
+   57 0000001C         
+   58 0000001C E3A06000        MOV              R6,#0       ;index
+   59 00000020 E3A0200A        MOV              R2,#N
+   60 00000024 E0020294        MUL              R2,R4,R2    ; total size in byt
+                                                            es
+   61 00000028 E0822000        ADD              R2,R2,R0    ; end address
+   62 0000002C         
+   63 0000002C         
+   64 0000002C E356000A 
+                       FORI    CMP              R6,#N       ; if (!ended)
+   65 00000030 2A000006        BHS              EFORI
+   66 00000034 E1A04106        MOV              R4,R6,LSL#2
+   67 00000038 2A000004        BHS              EFORI
+   68 0000003C E7903004        LDR              R3,[R0,R4]  ; loads from memory
+                                                            
+   69 00000040 E0050393        MUL              R5,R3,R3    ; ; squares
+   70 00000044 E7805004        STR              R5,[R0,R4]  ; stores into memor
+                                                            y
+   71 00000048 E2866001        ADD              R6,R6,#1    ; index increments
+   72 0000004C         
+   73 0000004C         
+   74 0000004C EAFFFFF6        B                FORI
+   75 00000050         EFORI
+   76 00000050         
+   77 00000050         
+   78 00000050         
+   79 00000050         ;;
+   80 00000050         ;; part iii
+   81 00000050         ;;
+   82 00000050         ;MOV R4,#4 
+   83 00000050         ;MOV R2,#N  
+   84 00000050         ;MUL R2,R4,R2      ; total size in bytes
+   85 00000050         ;MOV R3,#0   ; index 
+   86 00000050         
+   87 00000050         
+   88 00000050         
+   89 00000050         ;FORI CMP R3,#N   ; if (!ended)
+   90 00000050         ;BHS EFORI
+   91 00000050         ;LDR R6,[R0,R3,LSL#2]  ; loads from memory
+   92 00000050         ;MUL R5,R6,R6;   ; squares
+   93 00000050         ;STR R5,[R0,R3,LSL# 2]  ; stores into memory
+   94 00000050         ;ADD R3,R3,#1   ; increments index
+   95 00000050         
+   96 00000050         ;B FORI
+   97 00000050         ;EFORI
+
+
+
+ARM Macro Assembler    Page 3 
+
+
+   98 00000050         
+   99 00000050         
+  100 00000050         ;;
+  101 00000050         ;; part iv
+  102 00000050         ;;
+  103 00000050         
+  104 00000050         ;MOV R2,#N   
+  105 00000050         ;MOV R4,#4            ; size of element
+  106 00000050         ;MUL R2,R4,R2         ; total size in bytes
+  107 00000050         ;ADD R2,R2,R0    ; end address
+  108 00000050         
+  109 00000050         
+  110 00000050         ;FORI CMP R0,R2  ; if (!ended)
+  111 00000050         ;BHS EFORI
+  112 00000050         ;LDR R3,[R0]  ; loads from memory
+  113 00000050         ;MUL R5,R3,R3; ; squares
+  114 00000050         ;STR R5,[R0],R4 ; stores into memory, and post increment
+                       
+  115 00000050         
+  116 00000050         ;B FORI
+  117 00000050         ;EFORI
+  118 00000050         
+  119 00000050         
+  120 00000050         
+  121 00000050 EAFFFFFE 
+                       STOP    B                STOP
+  122 00000054         
+  123 00000054                 END
+              40001000 
+Command Line: --debug --xref --diag_suppress=9931 --apcs=interwork --depend=.\o
+bjects\lab1-addressing-modes.d -o.\objects\lab1-addressing-modes.o -IC:\Keil_v5
+\ARM\RV31\INC -IC:\Keil_v5\ARM\CMSIS\Include -IC:\Keil_v5\ARM\Inc\Philips --pre
+define="__EVAL SETA 1" --predefine="__UVISION_VERSION SETA 516" --list=.\listin
+gs\lab1-addressing-modes.lst lab1-addressing-modes.s
+
+
+
+ARM Macro Assembler    Page 1 Alphabetic symbol ordering
+Relocatable symbols
+
+ARRAY 00000000
+
+Symbol: ARRAY
+   Definitions
+      At line 12 in file lab1-addressing-modes.s
+   Uses
+      None
+Comment: ARRAY unused
+globals 00000000
+
+Symbol: globals
+   Definitions
+      At line 8 in file lab1-addressing-modes.s
+   Uses
+      None
+Comment: globals unused
+2 symbols
+
+
+
+ARM Macro Assembler    Page 1 Alphabetic symbol ordering
+Relocatable symbols
+
+EFORI 00000050
+
+Symbol: EFORI
+   Definitions
+      At line 75 in file lab1-addressing-modes.s
+   Uses
+      At line 65 in file lab1-addressing-modes.s
+      At line 67 in file lab1-addressing-modes.s
+
+FORI 0000002C
+
+Symbol: FORI
+   Definitions
+      At line 64 in file lab1-addressing-modes.s
+   Uses
+      At line 74 in file lab1-addressing-modes.s
+Comment: FORI used once
+L1 00000008
+
+Symbol: L1
+   Definitions
+      At line 22 in file lab1-addressing-modes.s
+   Uses
+      At line 26 in file lab1-addressing-modes.s
+Comment: L1 used once
+L2 0000001C
+
+Symbol: L2
+   Definitions
+      At line 27 in file lab1-addressing-modes.s
+   Uses
+      At line 23 in file lab1-addressing-modes.s
+Comment: L2 used once
+RESET 00000000
+
+Symbol: RESET
+   Definitions
+      At line 15 in file lab1-addressing-modes.s
+   Uses
+      None
+Comment: RESET unused
+STOP 00000050
+
+Symbol: STOP
+   Definitions
+      At line 121 in file lab1-addressing-modes.s
+   Uses
+      At line 121 in file lab1-addressing-modes.s
+Comment: STOP used once
+6 symbols
+
+
+
+ARM Macro Assembler    Page 1 Alphabetic symbol ordering
+Absolute symbols
+
+N 0000000A
+
+Symbol: N
+   Definitions
+      At line 6 in file lab1-addressing-modes.s
+   Uses
+      At line 12 in file lab1-addressing-modes.s
+      At line 22 in file lab1-addressing-modes.s
+      At line 59 in file lab1-addressing-modes.s
+      At line 64 in file lab1-addressing-modes.s
+
+1 symbol
+343 symbols in table
